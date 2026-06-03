@@ -1,0 +1,216 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+header {
+  background: #fff;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header h1 { font-size: 16px; font-weight: 600; }
+header span { color: #666; font-size: 13px; }
+
+.search-bar {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  background: #fff;
+}
+
+.search-bar:focus { outline: none; border-color: #4f46e5; }
+
+.client-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.client-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.client-card:hover { border-color: #4f46e5; box-shadow: 0 2px 8px rgba(79,70,229,0.1); }
+.client-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.client-card p { font-size: 12px; color: #888; font-family: monospace; }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.back-link:hover { color: #4f46e5; }
+
+.client-header {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.client-header h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.client-header p { color: #666; font-size: 12px; font-family: monospace; }
+
+.skills-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+
+.skill-list { display: flex; flex-direction: column; gap: 8px; }
+
+.skill-item {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.skill-item:hover, .skill-item.active {
+  border-color: #4f46e5;
+  background: #fafaf9;
+}
+
+.skill-item.active { background: #eef2ff; }
+.skill-item h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.skill-item p { font-size: 11px; color: #666; line-height: 1.4; }
+
+.runner-panel {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.runner-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.runner-header h3 { font-size: 14px; font-weight: 600; }
+.runner-header .hint { font-size: 12px; color: #888; font-family: monospace; }
+
+.args-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.args-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.args-input:focus { outline: none; border-color: #4f46e5; }
+
+.run-btn {
+  padding: 8px 20px;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.run-btn:hover { background: #4338ca; }
+.run-btn:disabled { background: #a5b4fc; cursor: not-allowed; }
+
+.output-area {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  min-height: 400px;
+  max-height: 600px;
+  background: #0f0f0f;
+  color: #e5e5e5;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.output-area .empty { color: #555; font-style: italic; }
+
+.tool-badge {
+  display: inline-block;
+  background: #1e3a5f;
+  color: #7dd3fc;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin: 4px 0;
+}
+
+.tool-result-badge {
+  display: inline-block;
+  background: #14532d;
+  color: #86efac;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin: 4px 0;
+}
+
+.error-badge {
+  display: inline-block;
+  background: #7f1d1d;
+  color: #fca5a5;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin: 4px 0;
+}
+
+.done-badge {
+  display: inline-block;
+  background: #1f2937;
+  color: #9ca3af;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin: 8px 0;
+}
+
+.count { color: #6b7280; font-size: 12px; margin-bottom: 12px; }
