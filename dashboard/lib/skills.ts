@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, existsSync } from 'fs'
 import { join } from 'path'
+import { REPO_ROOT } from './clients'
 
 export interface Skill {
   id: string
@@ -10,7 +11,7 @@ export interface Skill {
 }
 
 export function getSkills(clientName: string): Skill[] {
-  const skillsDir = join(process.cwd(), '..', 'clients', clientName, '.claude', 'skills')
+  const skillsDir = join(REPO_ROOT, 'clients', clientName, '.claude', 'skills')
   if (!existsSync(skillsDir)) return []
 
   return readdirSync(skillsDir)
@@ -30,7 +31,7 @@ export function getSkills(clientName: string): Skill[] {
 }
 
 export function getSkillContent(clientName: string, skillId: string): string | null {
-  const skillDir = join(process.cwd(), '..', 'clients', clientName, '.claude', 'skills', skillId)
+  const skillDir = join(REPO_ROOT, 'clients', clientName, '.claude', 'skills', skillId)
   const skillMdPath = join(skillDir, 'SKILL.md')
   if (!existsSync(skillMdPath)) return null
 
@@ -66,7 +67,7 @@ function parseFrontmatter(content: string): Record<string, string> {
 }
 
 export function getContextFiles(clientName: string): Record<string, string> {
-  const contextDir = join(process.cwd(), '..', 'clients', clientName, 'context')
+  const contextDir = join(REPO_ROOT, 'clients', clientName, 'context')
   if (!existsSync(contextDir)) return {}
 
   const files: Record<string, string> = {}
@@ -81,7 +82,7 @@ export function getContextFiles(clientName: string): Record<string, string> {
 }
 
 export function readClientFile(clientName: string, relativePath: string): string | null {
-  const filePath = join(process.cwd(), '..', 'clients', clientName, relativePath)
+  const filePath = join(REPO_ROOT, 'clients', clientName, relativePath)
   if (!existsSync(filePath)) return null
   try {
     return readFileSync(filePath, 'utf8')
