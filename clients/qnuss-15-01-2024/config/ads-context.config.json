@@ -1,0 +1,55 @@
+{
+  "googleAds": {
+    "customerId": "1234567890",
+    "loginCustomerId": "0987654321",
+    "dateRange": 30,
+    "clientName": "Example Client",
+    "conversionActions": [
+      "purchase",
+      "lead"
+    ]
+  },
+  "competitors": {
+    "domains": ["competitor1.com", "competitor2.com", "competitor3.com"],
+    "location_code": 2528,
+    "_location_reference": "See .claude/skills/competitor-scraper/references/location-codes.json for all location codes (2840=US, 2826=UK, 2124=CA, 2036=AU, 2528=NL)"
+  },
+  "searchTermAnalysis": {
+    "brandedCampaigns": ["Branded campaign name"],
+    "excludeBrandedCampaigns": true,
+
+    "minSpendToFlag": 5,
+    "conversionLagDays": 8,
+    "negativeMatchType": "Broad",
+
+    "biddingStrategy": "cpa",
+    "inefficientCPAMultiplier": 1.5,
+    "inefficientROASMultiplier": 0.7,
+    "minSpendForInefficient": 50,
+    "minClicksForInefficient": 3,
+
+    "protectedTerms": {
+      "alwaysInclude": [],
+      "neverExclude": []
+    },
+
+    "sharedNegativeLists": {
+      "primary": "Search Term Exclusions",
+      "ngramNonConverting": "Non-Converting N-grams",
+      "ngramInefficient": "Inefficient N-grams"
+    }
+  },
+  "ngramAnalysis": {
+    "minImpressions": 50,
+    "minClicks": 5,
+    "minDistinctTerms": 2,
+
+    "biddingStrategy": "cpa",
+    "defaultAOV": 200,
+    "nonConvertingSpendMultiplier": 2.0,
+    "inefficientCPAMultiplier": 1.75,
+    "inefficientROASMultiplier": 0.7,
+
+    "stopwords": []
+  }
+}
