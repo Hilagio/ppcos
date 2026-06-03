@@ -2,8 +2,439 @@
   "version": "1.0",
   "clients": [
     {
-      "name": "client-example",
-      "enabled": true
+      "name": "t-eekhoornnest-eek",
+      "enabled": true,
+      "customerId": 2649807490
+    },
+    {
+      "name": "123horecadiscounter",
+      "enabled": true,
+      "customerId": 7878153242
+    },
+    {
+      "name": "2grown",
+      "enabled": true,
+      "customerId": 1721938641
+    },
+    {
+      "name": "anperio",
+      "enabled": true,
+      "customerId": 4542055866
+    },
+    {
+      "name": "azuramoda",
+      "enabled": true,
+      "customerId": 2198636045
+    },
+    {
+      "name": "barocco",
+      "enabled": true,
+      "customerId": 3647501695
+    },
+    {
+      "name": "beautysalon-den-helder",
+      "enabled": true,
+      "customerId": 2764333209
+    },
+    {
+      "name": "breuermode",
+      "enabled": true,
+      "customerId": 1079333745
+    },
+    {
+      "name": "briller-com",
+      "enabled": true,
+      "customerId": 3640621835
+    },
+    {
+      "name": "bywonderlash",
+      "enabled": true,
+      "customerId": 2533615884
+    },
+    {
+      "name": "capiche-caps",
+      "enabled": true,
+      "customerId": 5473817046
+    },
+    {
+      "name": "celiora",
+      "enabled": true,
+      "customerId": 7478493341
+    },
+    {
+      "name": "clean-del-sol",
+      "enabled": true,
+      "customerId": 2404607241
+    },
+    {
+      "name": "code95cursus-nl",
+      "enabled": true,
+      "customerId": 8915273296
+    },
+    {
+      "name": "cramer-design",
+      "enabled": true,
+      "customerId": 1632659068
+    },
+    {
+      "name": "danish-mode",
+      "enabled": true,
+      "customerId": 2285252695
+    },
+    {
+      "name": "deen-essence",
+      "enabled": true,
+      "customerId": 2807355160
+    },
+    {
+      "name": "dennis-n-celvoir-fr",
+      "enabled": true,
+      "customerId": 8784227699
+    },
+    {
+      "name": "direct-sails",
+      "enabled": true,
+      "customerId": 9938451109
+    },
+    {
+      "name": "ecomtrada",
+      "enabled": true,
+      "customerId": 4440445191
+    },
+    {
+      "name": "emiyosuomi-sam",
+      "enabled": true,
+      "customerId": 1231935129
+    },
+    {
+      "name": "energieblikjes-nl-google-ads-account",
+      "enabled": true,
+      "customerId": 1217726437
+    },
+    {
+      "name": "enjuvie",
+      "enabled": true,
+      "customerId": 7308204360
+    },
+    {
+      "name": "fabulove-google-ads-account",
+      "enabled": true,
+      "customerId": 4839401380
+    },
+    {
+      "name": "finedent",
+      "enabled": true,
+      "customerId": 6562793822
+    },
+    {
+      "name": "frametheworld-co-uk",
+      "enabled": true,
+      "customerId": 3838215397
+    },
+    {
+      "name": "fysiotherapie-suri",
+      "enabled": true,
+      "customerId": 1297249651
+    },
+    {
+      "name": "google-ads-account-rovary",
+      "enabled": true,
+      "customerId": 4939224095
+    },
+    {
+      "name": "he-duurzaam",
+      "enabled": true,
+      "customerId": 6676231498
+    },
+    {
+      "name": "holland-electric",
+      "enabled": true,
+      "customerId": 9908072570
+    },
+    {
+      "name": "iconshoe",
+      "enabled": true,
+      "customerId": 7345921999
+    },
+    {
+      "name": "jb-gentlemont",
+      "enabled": true,
+      "customerId": 5592860103
+    },
+    {
+      "name": "jb-jor-riset",
+      "enabled": true,
+      "customerId": 1170170066
+    },
+    {
+      "name": "jb-jula-amsterdam",
+      "enabled": true,
+      "customerId": 7427521374
+    },
+    {
+      "name": "jb-livwow",
+      "enabled": true,
+      "customerId": 7284672096
+    },
+    {
+      "name": "jb-norielle",
+      "enabled": true,
+      "customerId": 7144203339
+    },
+    {
+      "name": "jb-zentaro-nl",
+      "enabled": true,
+      "customerId": 4897101129
+    },
+    {
+      "name": "jt-products-eu",
+      "enabled": true,
+      "customerId": 4087561656
+    },
+    {
+      "name": "jtproducts-nl",
+      "enabled": true,
+      "customerId": 3293496992
+    },
+    {
+      "name": "kees-de-vaan-opleidingen",
+      "enabled": true,
+      "customerId": 8090129733
+    },
+    {
+      "name": "kunst-van-staal",
+      "enabled": true,
+      "customerId": 3841558882
+    },
+    {
+      "name": "lefup",
+      "enabled": true,
+      "customerId": 8183761725
+    },
+    {
+      "name": "lindenberg-modehaus",
+      "enabled": true,
+      "customerId": 6957287890
+    },
+    {
+      "name": "little-woolie",
+      "enabled": true,
+      "customerId": 2409476368
+    },
+    {
+      "name": "luna-fashionhouse",
+      "enabled": true,
+      "customerId": 4221099819
+    },
+    {
+      "name": "lunive-montreal",
+      "enabled": true,
+      "customerId": 2049275907
+    },
+    {
+      "name": "lydia-boutique",
+      "enabled": true,
+      "customerId": 9445196739
+    },
+    {
+      "name": "lys-k-benhavn",
+      "enabled": true,
+      "customerId": 4958787093
+    },
+    {
+      "name": "maison-lunavive",
+      "enabled": true,
+      "customerId": 9356379333
+    },
+    {
+      "name": "maison-lumi",
+      "enabled": true,
+      "customerId": 9329630358
+    },
+    {
+      "name": "maravine-studio",
+      "enabled": true,
+      "customerId": 8149325996
+    },
+    {
+      "name": "moda-pozna-google-ads-account",
+      "enabled": true,
+      "customerId": 2466536944
+    },
+    {
+      "name": "modavia",
+      "enabled": true,
+      "customerId": 5298407721
+    },
+    {
+      "name": "montier",
+      "enabled": true,
+      "customerId": 7781718066
+    },
+    {
+      "name": "muse-maison",
+      "enabled": true,
+      "customerId": 4799881721
+    },
+    {
+      "name": "napoly-menswear",
+      "enabled": true,
+      "customerId": 6661292507
+    },
+    {
+      "name": "novora-the-label",
+      "enabled": true,
+      "customerId": 2677393198
+    },
+    {
+      "name": "nuvaarbewijs-opleidingen",
+      "enabled": true,
+      "customerId": 3229473845
+    },
+    {
+      "name": "oliwia-moda",
+      "enabled": true,
+      "customerId": 3042438323
+    },
+    {
+      "name": "ona-shape",
+      "enabled": true,
+      "customerId": 7029087939
+    },
+    {
+      "name": "ooshbaby",
+      "enabled": true,
+      "customerId": 5013714556
+    },
+    {
+      "name": "orizelle",
+      "enabled": true,
+      "customerId": 4995231354
+    },
+    {
+      "name": "parluxe",
+      "enabled": true,
+      "customerId": 7210114239
+    },
+    {
+      "name": "perlowa-moda",
+      "enabled": true,
+      "customerId": 2642064662
+    },
+    {
+      "name": "portee-vrai",
+      "enabled": true,
+      "customerId": 3417622356
+    },
+    {
+      "name": "pure-parfum",
+      "enabled": true,
+      "customerId": 1084404586
+    },
+    {
+      "name": "pure-parfum-germany",
+      "enabled": true,
+      "customerId": 1612753201
+    },
+    {
+      "name": "q2-schadeherstel",
+      "enabled": true,
+      "customerId": 5658259550
+    },
+    {
+      "name": "qnuss-15-01-2024",
+      "enabled": true,
+      "customerId": 7505187184
+    },
+    {
+      "name": "reality-racing",
+      "enabled": true,
+      "customerId": 9247130647
+    },
+    {
+      "name": "resona-health",
+      "enabled": true,
+      "customerId": 2735683621
+    },
+    {
+      "name": "rwc-medical",
+      "enabled": true,
+      "customerId": 4279326191
+    },
+    {
+      "name": "saffory",
+      "enabled": true,
+      "customerId": 4386453150
+    },
+    {
+      "name": "solara-bags",
+      "enabled": true,
+      "customerId": 7467243223
+    },
+    {
+      "name": "solution-clothing",
+      "enabled": true,
+      "customerId": 3327005811
+    },
+    {
+      "name": "splasher-x",
+      "enabled": true,
+      "customerId": 4977005723
+    },
+    {
+      "name": "takori",
+      "enabled": true,
+      "customerId": 1609819215
+    },
+    {
+      "name": "tayno-footwear",
+      "enabled": true,
+      "customerId": 5936944688
+    },
+    {
+      "name": "thecomfortlady",
+      "enabled": true,
+      "customerId": 9663548431
+    },
+    {
+      "name": "thelightstudiocanada",
+      "enabled": true,
+      "customerId": 6500335368
+    },
+    {
+      "name": "tillybare-r00d",
+      "enabled": true,
+      "customerId": 4093353601
+    },
+    {
+      "name": "trebhorecalinnen-nl",
+      "enabled": true,
+      "customerId": 6514251012
+    },
+    {
+      "name": "try-spirelia",
+      "enabled": true,
+      "customerId": 4308556248
+    },
+    {
+      "name": "tryhalla",
+      "enabled": true,
+      "customerId": 8963859249
+    },
+    {
+      "name": "van-ice-interior",
+      "enabled": true,
+      "customerId": 2576868152
+    },
+    {
+      "name": "vellure-homme",
+      "enabled": true,
+      "customerId": 5343752390
+    },
+    {
+      "name": "vizoya",
+      "enabled": true,
+      "customerId": 3213323484
     }
   ]
 }
