@@ -1,7 +1,9 @@
 {
   "type": "module",
   "scripts": {
+    "predev": "node scripts/generate-data.mjs",
     "dev": "next dev -p 3000",
+    "prebuild": "node scripts/generate-data.mjs",
     "build": "next build",
     "start": "next start -p 3000"
   },

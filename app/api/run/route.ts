@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getClient } from '@/lib/clients'
-import { getSkillContent, readClientFile } from '@/lib/skills'
+import { getSkill, readContextFile } from '@/lib/skills'
 import { runGaqlQuery } from '@/lib/google-ads'
 
 const anthropic = new Anthropic({
@@ -38,14 +38,13 @@ export async function POST(request: Request) {
   const clientConfig = getClient(clientName)
   if (!clientConfig) return new Response('Client not found', { status: 404 })
 
-  const skillContent = getSkillContent(clientName, skillId)
-  if (!skillContent) return new Response('Skill not found', { status: 404 })
+  const skill = getSkill(clientName, skillId)
+  if (!skill) return new Response('Skill not found', { status: 404 })
 
-  const claudeMd = readClientFile(clientName, 'CLAUDE.md') || ''
-  const businessMd = readClientFile(clientName, 'context/business.md')
-  const changelogMd = readClientFile(clientName, 'context/account-changelog.md')
+  const businessMd = readContextFile(clientName, 'context/business.md')
+  const changelogMd = readContextFile(clientName, 'context/account-changelog.md')
 
-  let systemPrompt = claudeMd + '\n\n---\n\n' + skillContent
+  let systemPrompt = skill.claudeMd + '\n\n---\n\n' + skill.content
   if (businessMd) systemPrompt += '\n\n## Business Context\n' + businessMd
   if (changelogMd) systemPrompt += '\n\n## Account Changelog\n' + changelogMd
 
@@ -92,7 +91,7 @@ export async function POST(request: Request) {
                   result = JSON.stringify(rows, null, 2)
                   send({ type: 'tool_result', name: block.name, summary: `${rows.length} rows returned` })
                 } else if (block.name === 'read_context_file') {
-                  const content = readClientFile(clientName, (block.input as { path: string }).path)
+                  const content = readContextFile(clientName, (block.input as { path: string }).path)
                   result = content ?? 'File not found'
                   send({ type: 'tool_result', name: block.name, summary: content ? 'File read' : 'File not found' })
                 } else {

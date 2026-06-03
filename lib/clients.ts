@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'fs'
+import { readFileSync } from 'fs'
 import { join } from 'path'
 
 export interface ClientConfig {
@@ -11,13 +11,10 @@ export interface ClientConfig {
 const REPO_ROOT = process.cwd()
 
 export function getClients(): ClientConfig[] {
-  const path = join(REPO_ROOT, 'main-config.json')
-  const config = JSON.parse(readFileSync(path, 'utf8'))
-  return config.clients.filter((c: ClientConfig) => c.enabled)
+  const path = join(REPO_ROOT, 'lib', 'data', 'clients.json')
+  return JSON.parse(readFileSync(path, 'utf8')).filter((c: ClientConfig) => c.enabled)
 }
 
 export function getClient(name: string): ClientConfig | undefined {
   return getClients().find(c => c.name === name)
 }
-
-export { REPO_ROOT }

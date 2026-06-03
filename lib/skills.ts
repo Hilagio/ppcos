@@ -1,6 +1,5 @@
-import { readdirSync, readFileSync, existsSync } from 'fs'
+import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
-import { REPO_ROOT } from './clients'
 
 export interface Skill {
   id: string
@@ -8,85 +7,32 @@ export interface Skill {
   description: string
   argumentHint: string
   content: string
+  claudeMd: string
 }
 
-export function getSkills(clientName: string): Skill[] {
-  const skillsDir = join(REPO_ROOT, 'clients', clientName, '.claude', 'skills')
-  if (!existsSync(skillsDir)) return []
+const REPO_ROOT = process.cwd()
 
-  return readdirSync(skillsDir)
-    .filter(dir => existsSync(join(skillsDir, dir, 'SKILL.md')))
-    .map(dir => {
-      const content = readFileSync(join(skillsDir, dir, 'SKILL.md'), 'utf8')
-      const frontmatter = parseFrontmatter(content)
-      return {
-        id: dir,
-        name: frontmatter.name || dir,
-        description: frontmatter.description || '',
-        argumentHint: frontmatter['argument-hint'] || '',
-        content,
-      }
-    })
-    .sort((a, b) => a.name.localeCompare(b.name))
+function skillsPath(clientName: string) {
+  return join(REPO_ROOT, 'lib', 'data', 'skills', `${clientName}.json`)
 }
 
-export function getSkillContent(clientName: string, skillId: string): string | null {
-  const skillDir = join(REPO_ROOT, 'clients', clientName, '.claude', 'skills', skillId)
-  const skillMdPath = join(skillDir, 'SKILL.md')
-  if (!existsSync(skillMdPath)) return null
-
-  let content = readFileSync(skillMdPath, 'utf8')
-
-  // Append any reference files
-  const refDir = join(skillDir, 'reference')
-  if (existsSync(refDir)) {
-    const refs = readdirSync(refDir)
-    if (refs.length > 0) {
-      content += '\n\n## Reference Files\n'
-      for (const ref of refs) {
-        content += `\n### ${ref}\n\`\`\`\n${readFileSync(join(refDir, ref), 'utf8')}\n\`\`\`\n`
-      }
-    }
-  }
-
-  return content
+export function getSkills(clientName: string): Omit<Skill, 'content' | 'claudeMd'>[] {
+  const path = skillsPath(clientName)
+  if (!existsSync(path)) return []
+  return (JSON.parse(readFileSync(path, 'utf8')) as Skill[]).map(({ id, name, description, argumentHint }) => ({
+    id, name, description, argumentHint
+  }))
 }
 
-function parseFrontmatter(content: string): Record<string, string> {
-  const match = content.match(/^---\n([\s\S]*?)\n---/)
-  if (!match) return {}
-  const result: Record<string, string> = {}
-  for (const line of match[1].split('\n')) {
-    const colonIdx = line.indexOf(':')
-    if (colonIdx === -1) continue
-    const key = line.slice(0, colonIdx).trim()
-    const value = line.slice(colonIdx + 1).trim()
-    result[key] = value
-  }
-  return result
+export function getSkill(clientName: string, skillId: string): Skill | null {
+  const path = skillsPath(clientName)
+  if (!existsSync(path)) return null
+  const skills: Skill[] = JSON.parse(readFileSync(path, 'utf8'))
+  return skills.find(s => s.id === skillId) ?? null
 }
 
-export function getContextFiles(clientName: string): Record<string, string> {
-  const contextDir = join(REPO_ROOT, 'clients', clientName, 'context')
-  if (!existsSync(contextDir)) return {}
-
-  const files: Record<string, string> = {}
-  for (const file of readdirSync(contextDir)) {
-    if (file.endsWith('.md') || file.endsWith('.csv') || file.endsWith('.txt')) {
-      try {
-        files[file] = readFileSync(join(contextDir, file), 'utf8')
-      } catch {}
-    }
-  }
-  return files
-}
-
-export function readClientFile(clientName: string, relativePath: string): string | null {
+export function readContextFile(clientName: string, relativePath: string): string | null {
   const filePath = join(REPO_ROOT, 'clients', clientName, relativePath)
   if (!existsSync(filePath)) return null
-  try {
-    return readFileSync(filePath, 'utf8')
-  } catch {
-    return null
-  }
+  try { return readFileSync(filePath, 'utf8') } catch { return null }
 }
