@@ -124,6 +124,8 @@ export default function HomePage() {
           <div className="empty-state">← Select a client to get started</div>
         ) : loadingSkills ? (
           <div className="empty-state">Loading skills...</div>
+        ) : skills.length === 0 ? (
+          <div className="empty-state">No skills found — Vercel may still be deploying</div>
         ) : (
           <div className="skills-layout">
             <div className="skill-list">
