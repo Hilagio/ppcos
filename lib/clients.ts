@@ -8,10 +8,7 @@ export interface ClientConfig {
   loginCustomerId: number
 }
 
-// In dev cwd = dashboard/, in Vercel cwd = repo root
-const REPO_ROOT = existsSync(join(process.cwd(), 'main-config.json'))
-  ? process.cwd()
-  : join(process.cwd(), '..')
+const REPO_ROOT = process.cwd()
 
 export function getClients(): ClientConfig[] {
   const path = join(REPO_ROOT, 'main-config.json')
