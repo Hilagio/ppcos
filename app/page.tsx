@@ -180,6 +180,11 @@ export default function HomePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client: selectedClient.name, skill: selectedSkill.id, args, context }),
       })
+      if (!res.ok) {
+        const text = await res.text()
+        setOutput(prev => [...prev, { type: 'error', content: `Server error ${res.status}: ${text}` }])
+        return
+      }
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
       let buffer = ''

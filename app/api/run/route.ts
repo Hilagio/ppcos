@@ -53,21 +53,23 @@ interface ClientContext {
 }
 
 function buildContextSection(ctx: ClientContext, customerId: string, loginCustomerId: string): string {
-  const brandedCampaigns = ctx.campaigns.filter(c => c.label === 'brand').map(c => c.name)
-  const includedConversions = ctx.conversionActions.filter(c => c.include).map(c => c.name)
+  const campaigns = ctx.campaigns ?? []
+  const conversionActions = ctx.conversionActions ?? []
+  const brandedCampaigns = campaigns.filter(c => c.label === 'brand').map(c => c.name)
+  const includedConversions = conversionActions.filter(c => c.include).map(c => c.name)
   const competitorDomains = ctx.competitorDomains
     ? ctx.competitorDomains.split(',').map(d => d.trim()).filter(Boolean)
     : []
 
-  const campaignLines = ctx.campaigns.length > 0
-    ? ctx.campaigns.map(c => {
+  const campaignLines = campaigns.length > 0
+    ? campaigns.map(c => {
         const cpa = c.cpa30d != null ? `${ctx.currency} ${c.cpa30d} CPA` : 'no conversions'
         return `- **${c.name}** [${c.label || 'unlabeled'}] — ${c.type}, ${c.biddingStrategy}, ${c.status}, 30d spend: ${ctx.currency} ${c.cost30d}, ${cpa}`
       }).join('\n')
     : '— not available'
 
-  const conversionLines = ctx.conversionActions.length > 0
-    ? ctx.conversionActions.map(c => {
+  const conversionLines = conversionActions.length > 0
+    ? conversionActions.map(c => {
         const val = c.customValue || (c.defaultValue ? String(c.defaultValue) : '—')
         return `- ${c.name} [${c.category}] — value: ${val} — ${c.include ? 'included' : 'EXCLUDED'}`
       }).join('\n')
