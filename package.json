@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "scripts": {
     "predev": "node scripts/generate-data.mjs",
     "dev": "next dev -p 3000",
