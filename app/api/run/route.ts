@@ -33,7 +33,7 @@ const TOOLS: Anthropic.Tool[] = [
 ]
 
 export async function POST(request: Request) {
-  const { client: clientName, skill: skillId, args } = await request.json()
+  const { client: clientName, skill: skillId, args, context } = await request.json()
 
   const clientConfig = getClient(clientName)
   if (!clientConfig) return new Response('Client not found', { status: 404 })
@@ -41,19 +41,32 @@ export async function POST(request: Request) {
   const skill = getSkill(clientName, skillId)
   if (!skill) return new Response('Skill not found', { status: 404 })
 
+  const contextSection = context && (context.businessName || context.vertical || context.primaryKpi)
+    ? `## Business Context
+- Business: ${context.businessName || '—'}
+- Vertical: ${context.vertical || '—'}
+- Primary KPI: ${context.primaryKpi || '—'}
+- Target CPA: ${context.targetCpa || '—'}
+- Target ROAS: ${context.targetRoas || '—'}
+- Monthly budget: ${context.budgetMonthly || '—'}
+- Constraints: ${context.constraints || '—'}
+- Notes: ${context.notes || '—'}`
+    : '## Business Context\nNot set — use available data to infer where possible.'
+
   const systemPrompt = `${skill.claudeMd}
 
 ---
 
-## Dashboard Environment — Important
+## Dashboard Environment
 
-Context files (context/business.md, context/account-changelog.md, config/ads-context.config.json) are NOT available as files in this environment. Do NOT attempt to read them — skip straight to using the \`run_gaql_query\` tool to fetch all data you need live from the Google Ads API.
+Context files are NOT available as files. Do NOT attempt to read them.
+Use the \`run_gaql_query\` tool to fetch all live data from the Google Ads API.
 
-The client's Google Ads configuration is:
+Google Ads config:
 - Customer ID: ${clientConfig.customerId}
 - Login Customer ID: ${clientConfig.loginCustomerId}
 
-You have full access to the Google Ads API via \`run_gaql_query\`. Use it directly to fetch campaigns, ad groups, keywords, settings, change history, and any other data the skill requires. Do not wait for or request missing files.
+${contextSection}
 
 ---
 

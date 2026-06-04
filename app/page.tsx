@@ -5,9 +5,39 @@ import { useState, useEffect, useRef } from 'react'
 interface Client { name: string; customerId: number }
 interface Skill { id: string; name: string; description: string; argumentHint: string }
 interface OutputLine { type: 'text' | 'tool_use' | 'tool_result' | 'tool_error' | 'error' | 'done'; content: string }
+interface ClientContext {
+  businessName: string
+  vertical: string
+  primaryKpi: string
+  targetCpa: string
+  targetRoas: string
+  budgetMonthly: string
+  constraints: string
+  notes: string
+}
+
+const EMPTY_CONTEXT: ClientContext = {
+  businessName: '', vertical: '', primaryKpi: '', targetCpa: '',
+  targetRoas: '', budgetMonthly: '', constraints: '', notes: ''
+}
 
 const displayName = (name: string) =>
   name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+function loadContext(clientName: string): ClientContext | null {
+  try {
+    const raw = localStorage.getItem(`ppcos_context_${clientName}`)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function saveContext(clientName: string, ctx: ClientContext) {
+  localStorage.setItem(`ppcos_context_${clientName}`, JSON.stringify(ctx))
+}
+
+function hasContext(ctx: ClientContext | null) {
+  return ctx && (ctx.businessName || ctx.vertical || ctx.primaryKpi)
+}
 
 export default function HomePage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -19,6 +49,9 @@ export default function HomePage() {
   const [args, setArgs] = useState('')
   const [running, setRunning] = useState(false)
   const [output, setOutput] = useState<OutputLine[]>([])
+  const [context, setContext] = useState<ClientContext | null>(null)
+  const [showContextForm, setShowContextForm] = useState(false)
+  const [contextDraft, setContextDraft] = useState<ClientContext>(EMPTY_CONTEXT)
   const outputRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -35,10 +68,22 @@ export default function HomePage() {
     setOutput([])
     setArgs('')
     setSkills([])
+    setShowContextForm(false)
+    const ctx = loadContext(client.name)
+    setContext(ctx)
+    setContextDraft(ctx ?? EMPTY_CONTEXT)
     setLoadingSkills(true)
     const data = await fetch(`/api/clients/${client.name}/skills`).then(r => r.json())
     setSkills(data)
     setLoadingSkills(false)
+    if (!hasContext(ctx)) setShowContextForm(true)
+  }
+
+  const saveAndClose = () => {
+    if (!selectedClient) return
+    saveContext(selectedClient.name, contextDraft)
+    setContext(contextDraft)
+    setShowContextForm(false)
   }
 
   const runSkill = async () => {
@@ -49,7 +94,7 @@ export default function HomePage() {
       const res = await fetch('/api/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client: selectedClient.name, skill: selectedSkill.id, args }),
+        body: JSON.stringify({ client: selectedClient.name, skill: selectedSkill.id, args, context }),
       })
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
@@ -97,12 +142,31 @@ export default function HomePage() {
     c.customerId.toString().includes(search)
   )
 
+  const field = (label: string, key: keyof ClientContext, placeholder: string, hint?: string) => (
+    <div className="form-field" key={key}>
+      <label>{label}{hint && <span className="form-hint"> — {hint}</span>}</label>
+      <input
+        value={contextDraft[key]}
+        onChange={e => setContextDraft(prev => ({ ...prev, [key]: e.target.value }))}
+        placeholder={placeholder}
+      />
+    </div>
+  )
+
   return (
     <>
       <header>
         <h1>PPCOS Dashboard</h1>
-        {selectedClient && <span>/ {displayName(selectedClient.name)}</span>}
+        {selectedClient && (
+          <>
+            <span>/ {displayName(selectedClient.name)}</span>
+            <button className="ctx-btn" onClick={() => setShowContextForm(v => !v)}>
+              {hasContext(context) ? '✓ Context' : '⚠ Setup context'}
+            </button>
+          </>
+        )}
       </header>
+
       <div className="main-layout">
         <div className="client-sidebar">
           <input className="search-bar" placeholder="Search clients..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -122,6 +186,27 @@ export default function HomePage() {
 
         {!selectedClient ? (
           <div className="empty-state">← Select a client to get started</div>
+        ) : showContextForm ? (
+          <div className="context-form">
+            <div className="context-form-header">
+              <h2>Client Context</h2>
+              <p>This info is used by all skills to give relevant advice. You can update it anytime.</p>
+            </div>
+            {field('Business / Brand name', 'businessName', 'e.g. Azuramoda')}
+            {field('Vertical', 'vertical', 'e.g. ecommerce, lead gen, local services')}
+            {field('Primary KPI', 'primaryKpi', 'e.g. ROAS, CPA, leads', 'main goal')}
+            {field('Target CPA', 'targetCpa', 'e.g. €25')}
+            {field('Target ROAS', 'targetRoas', 'e.g. 4x or 400%')}
+            {field('Monthly budget', 'budgetMonthly', 'e.g. €3.000/month')}
+            {field('Constraints', 'constraints', 'e.g. no brand bidding, max CPC €2', 'things that cannot change')}
+            {field('Notes', 'notes', 'Anything else Claude should know about this account')}
+            <div className="form-actions">
+              <button className="run-btn" onClick={saveAndClose}>Save & continue</button>
+              {hasContext(context) && (
+                <button className="cancel-btn" onClick={() => setShowContextForm(false)}>Cancel</button>
+              )}
+            </div>
+          </div>
         ) : loadingSkills ? (
           <div className="empty-state">Loading skills...</div>
         ) : skills.length === 0 ? (

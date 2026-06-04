@@ -278,3 +278,46 @@ header span { color: #666; font-size: 13px; }
 }
 
 .count { color: #6b7280; font-size: 12px; margin-bottom: 12px; }
+
+.ctx-btn {
+  margin-left: auto;
+  padding: 5px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ctx-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+
+.context-form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  background: #fff;
+}
+.context-form-header { margin-bottom: 24px; }
+.context-form-header h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.context-form-header p { color: #666; font-size: 13px; }
+
+.form-field { margin-bottom: 16px; }
+.form-field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+.form-hint { font-weight: 400; color: #888; }
+.form-field input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.form-field input:focus { outline: none; border-color: #4f46e5; }
+
+.form-actions { display: flex; gap: 10px; margin-top: 24px; }
+.cancel-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
