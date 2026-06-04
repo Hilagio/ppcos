@@ -1,11 +1,14 @@
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
+export interface ArgumentOption { value: string; label: string; description: string }
+
 export interface Skill {
   id: string
   name: string
   description: string
   argumentHint: string
+  argumentOptions: ArgumentOption[]
   content: string
   claudeMd: string
 }
@@ -19,8 +22,8 @@ function skillsPath(clientName: string) {
 export function getSkills(clientName: string): Omit<Skill, 'content' | 'claudeMd'>[] {
   const path = skillsPath(clientName)
   if (!existsSync(path)) return []
-  return (JSON.parse(readFileSync(path, 'utf8')) as Skill[]).map(({ id, name, description, argumentHint }) => ({
-    id, name, description, argumentHint
+  return (JSON.parse(readFileSync(path, 'utf8')) as Skill[]).map(({ id, name, description, argumentHint, argumentOptions }) => ({
+    id, name, description, argumentHint, argumentOptions: argumentOptions ?? []
   }))
 }
 

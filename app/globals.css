@@ -206,6 +206,18 @@ header span { color: #666; font-size: 13px; }
 
 .args-input:focus { outline: none; border-color: #4f46e5; }
 
+.args-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: monospace;
+  background: #fff;
+  cursor: pointer;
+}
+.args-select:focus { outline: none; border-color: #4f46e5; }
+
 .run-btn {
   padding: 8px 20px;
   background: #4f46e5;

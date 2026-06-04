@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 
 interface Client { name: string; customerId: number }
-interface Skill { id: string; name: string; description: string; argumentHint: string }
+interface ArgumentOption { value: string; label: string; description: string }
+interface Skill { id: string; name: string; description: string; argumentHint: string; argumentOptions: ArgumentOption[] }
 interface OutputLine { type: 'text' | 'tool_use' | 'tool_result' | 'tool_error' | 'error' | 'done'; content: string }
 
 interface Campaign {
@@ -484,13 +485,28 @@ export default function HomePage() {
                     {selectedSkill.argumentHint && <span className="hint">{selectedSkill.argumentHint}</span>}
                   </div>
                   <div className="args-row">
-                    <input
-                      className="args-input"
-                      placeholder={selectedSkill.argumentHint || 'Optional arguments...'}
-                      value={args}
-                      onChange={e => setArgs(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && runSkill()}
-                    />
+                    {selectedSkill.argumentOptions?.length > 0 ? (
+                      <select
+                        className="args-select"
+                        value={args}
+                        onChange={e => setArgs(e.target.value)}
+                      >
+                        <option value="">All modules (full audit)</option>
+                        {selectedSkill.argumentOptions.map(o => (
+                          <option key={o.value} value={o.value} title={o.description}>
+                            {o.label} — {o.description}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        className="args-input"
+                        placeholder={selectedSkill.argumentHint || 'Optional arguments...'}
+                        value={args}
+                        onChange={e => setArgs(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && runSkill()}
+                      />
+                    )}
                     <button className="run-btn" onClick={runSkill} disabled={running}>
                       {running ? 'Running...' : 'Run'}
                     </button>

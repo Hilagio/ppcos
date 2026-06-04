@@ -48,11 +48,17 @@ for (const client of config.clients) {
       ? readFileSync(join(ROOT, 'clients', client.name, 'CLAUDE.md'), 'utf8')
       : ''
 
+    const optionsPath = join(skillsDir, skillId, 'argument-options.json')
+    const argumentOptions = existsSync(optionsPath)
+      ? JSON.parse(readFileSync(optionsPath, 'utf8'))
+      : []
+
     skills.push({
       id: skillId,
       name: fm.name || skillId,
       description: fm.description || '',
       argumentHint: fm['argument-hint'] || '',
+      argumentOptions,
       content,
       claudeMd,
     })

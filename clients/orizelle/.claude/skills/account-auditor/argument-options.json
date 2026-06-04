@@ -1,0 +1,7 @@
+[
+  {"value":"structure","label":"Structure","description":"D01-D08: Campaign type separation, brand/non-brand, business alignment, count, budget fragmentation, targeting overlap"},
+  {"value":"naming","label":"Naming","description":"D09-D10: Campaign and ad group naming conventions"},
+  {"value":"settings","label":"Settings","description":"D11-D19: Display Network, Search Partners, location, language, rotation, ad schedule, tracking, URL expansion"},
+  {"value":"ad-groups","label":"Ad Groups","description":"D20-D23: Thematic tightness, ads per group, impression distribution, SKAG detection"},
+  {"value":"defaults","label":"Defaults","description":"D24: Account-level setting defaults"}
+]
