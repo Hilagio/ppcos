@@ -32,7 +32,7 @@ export async function runGaqlQuery(
   const cleanId = customerId.replace(/-/g, '')
 
   const res = await fetch(
-    `https://googleads.googleapis.com/v19/customers/${cleanId}/googleAds:search`,
+    `https://googleads.googleapis.com/v24/customers/${cleanId}/googleAds:search`,
     {
       method: 'POST',
       headers: {
