@@ -5,24 +5,82 @@ import { useState, useEffect, useRef } from 'react'
 interface Client { name: string; customerId: number }
 interface Skill { id: string; name: string; description: string; argumentHint: string }
 interface OutputLine { type: 'text' | 'tool_use' | 'tool_result' | 'tool_error' | 'error' | 'done'; content: string }
+
+interface Campaign {
+  name: string
+  type: string
+  status: string
+  biddingStrategy: string
+  cost30d: number
+  conversions30d: number
+  cpa30d: number | null
+  roas30d: number | null
+  label: string
+}
+
+interface ConversionAction {
+  name: string
+  category: string
+  defaultValue: number
+  countingType: string
+  isPrimary: boolean
+  include: boolean
+  customValue: string
+}
+
 interface ClientContext {
   businessName: string
   vertical: string
+  mode: string
+  phase: string
   primaryKpi: string
   targetCpa: string
   targetRoas: string
+  targetConversions: string
+  maxCpa: string
+  minRoas: string
   budgetMonthly: string
+  currency: string
+  campaigns: Campaign[]
+  conversionActions: ConversionAction[]
+  valuePerLead: string
+  leadToCloseRate: string
+  avgDealValue: string
+  conversionLagDays: string
+  competitiveApproach: string
+  competitorDomains: string
+  locationCode: string
+  winThemes: string
+  negativeMatchType: string
+  primaryNegativeList: string
   constraints: string
+  seasonalityNotes: string
   notes: string
 }
 
 const EMPTY_CONTEXT: ClientContext = {
-  businessName: '', vertical: '', primaryKpi: '', targetCpa: '',
-  targetRoas: '', budgetMonthly: '', constraints: '', notes: ''
+  businessName: '', vertical: '', mode: '', phase: '',
+  primaryKpi: '', targetCpa: '', targetRoas: '', targetConversions: '', maxCpa: '', minRoas: '',
+  budgetMonthly: '', currency: 'EUR',
+  campaigns: [], conversionActions: [],
+  valuePerLead: '', leadToCloseRate: '', avgDealValue: '', conversionLagDays: '14',
+  competitiveApproach: '', competitorDomains: '', locationCode: '2528', winThemes: '',
+  negativeMatchType: 'Broad', primaryNegativeList: 'Search Term Exclusions',
+  constraints: '', seasonalityNotes: '', notes: '',
+}
+
+const LOCATION_CODES: Record<string, string> = {
+  '2528': 'Netherlands', '2276': 'Germany', '2250': 'France', '2724': 'Spain',
+  '2380': 'Italy', '2056': 'Belgium', '2840': 'United States', '2826': 'United Kingdom',
+  '2124': 'Canada', '2036': 'Australia', '2554': 'New Zealand', '2756': 'Switzerland',
+  '2040': 'Austria', '2752': 'Sweden', '2208': 'Denmark', '2246': 'Finland', '2578': 'Norway',
 }
 
 const displayName = (name: string) =>
   name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+
+const formatCampaignType = (t: string) =>
+  ({ SEARCH: 'Search', SHOPPING: 'Shopping', PERFORMANCE_MAX: 'PMax', DISPLAY: 'Display', VIDEO: 'Video' }[t] ?? t)
 
 function loadContext(clientName: string): ClientContext | null {
   try {
@@ -36,7 +94,20 @@ function saveContext(clientName: string, ctx: ClientContext) {
 }
 
 function hasContext(ctx: ClientContext | null) {
-  return ctx && (ctx.businessName || ctx.vertical || ctx.primaryKpi)
+  return ctx && (ctx.businessName || ctx.primaryKpi)
+}
+
+function mergeWithLiveData(stored: ClientContext | null, live: { campaigns: Campaign[], conversionActions: ConversionAction[], currency: string }): ClientContext {
+  const base = stored ?? EMPTY_CONTEXT
+  const storedLabels = Object.fromEntries((stored?.campaigns ?? []).map(c => [c.name, c.label]))
+  const campaigns = live.campaigns.map(c => ({ ...c, label: storedLabels[c.name] ?? '' }))
+  const storedConv = Object.fromEntries((stored?.conversionActions ?? []).map(c => [c.name, c]))
+  const conversionActions = live.conversionActions.map(c => ({
+    ...c,
+    include: storedConv[c.name] !== undefined ? storedConv[c.name].include : c.include,
+    customValue: storedConv[c.name]?.customValue ?? '',
+  }))
+  return { ...base, campaigns, conversionActions, currency: live.currency || base.currency }
 }
 
 export default function HomePage() {
@@ -52,6 +123,7 @@ export default function HomePage() {
   const [context, setContext] = useState<ClientContext | null>(null)
   const [showContextForm, setShowContextForm] = useState(false)
   const [contextDraft, setContextDraft] = useState<ClientContext>(EMPTY_CONTEXT)
+  const [setupLoading, setSetupLoading] = useState(false)
   const outputRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -69,14 +141,25 @@ export default function HomePage() {
     setArgs('')
     setSkills([])
     setShowContextForm(false)
-    const ctx = loadContext(client.name)
-    setContext(ctx)
-    setContextDraft(ctx ?? EMPTY_CONTEXT)
     setLoadingSkills(true)
-    const data = await fetch(`/api/clients/${client.name}/skills`).then(r => r.json())
-    setSkills(data)
+
+    const stored = loadContext(client.name)
+    setContext(stored)
+    setSetupLoading(true)
+
+    const [skillsData, setupData] = await Promise.all([
+      fetch(`/api/clients/${client.name}/skills`).then(r => r.json()),
+      fetch(`/api/clients/${client.name}/setup`).then(r => r.json()),
+    ])
+
+    setSkills(skillsData)
     setLoadingSkills(false)
-    if (!hasContext(ctx)) setShowContextForm(true)
+
+    const merged = mergeWithLiveData(stored, setupData)
+    setContextDraft(merged)
+    setSetupLoading(false)
+
+    if (!hasContext(stored)) setShowContextForm(true)
   }
 
   const saveAndClose = () => {
@@ -137,19 +220,53 @@ export default function HomePage() {
     }
   }
 
+  const setDraft = (key: keyof ClientContext, value: unknown) =>
+    setContextDraft(prev => ({ ...prev, [key]: value }))
+
+  const setCampaignLabel = (idx: number, label: string) =>
+    setContextDraft(prev => {
+      const campaigns = [...prev.campaigns]
+      campaigns[idx] = { ...campaigns[idx], label }
+      return { ...prev, campaigns }
+    })
+
+  const setConversionInclude = (idx: number, include: boolean) =>
+    setContextDraft(prev => {
+      const conversionActions = [...prev.conversionActions]
+      conversionActions[idx] = { ...conversionActions[idx], include }
+      return { ...prev, conversionActions }
+    })
+
+  const setConversionValue = (idx: number, customValue: string) =>
+    setContextDraft(prev => {
+      const conversionActions = [...prev.conversionActions]
+      conversionActions[idx] = { ...conversionActions[idx], customValue }
+      return { ...prev, conversionActions }
+    })
+
   const filtered = clients.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.customerId.toString().includes(search)
   )
 
-  const field = (label: string, key: keyof ClientContext, placeholder: string, hint?: string) => (
+  const tf = (label: string, key: keyof ClientContext, placeholder: string, hint?: string) => (
     <div className="form-field" key={key}>
       <label>{label}{hint && <span className="form-hint"> — {hint}</span>}</label>
       <input
-        value={contextDraft[key]}
-        onChange={e => setContextDraft(prev => ({ ...prev, [key]: e.target.value }))}
+        value={contextDraft[key] as string}
+        onChange={e => setDraft(key, e.target.value)}
         placeholder={placeholder}
       />
+    </div>
+  )
+
+  const sf = (label: string, key: keyof ClientContext, options: string[], hint?: string) => (
+    <div className="form-field" key={key}>
+      <label>{label}{hint && <span className="form-hint"> — {hint}</span>}</label>
+      <select value={contextDraft[key] as string} onChange={e => setDraft(key, e.target.value)}>
+        <option value="">— select —</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
     </div>
   )
 
@@ -189,19 +306,151 @@ export default function HomePage() {
         ) : showContextForm ? (
           <div className="context-form">
             <div className="context-form-header">
-              <h2>Client Context</h2>
-              <p>This info is used by all skills to give relevant advice. You can update it anytime.</p>
+              <h2>Client Context — {displayName(selectedClient.name)}</h2>
+              <p>Injected into every skill run. Fill in once; update when the account changes.</p>
+              {setupLoading && <p className="setup-loading">Fetching live account data...</p>}
             </div>
-            {field('Business / Brand name', 'businessName', 'e.g. Azuramoda')}
-            {field('Vertical', 'vertical', 'e.g. ecommerce, lead gen, local services')}
-            {field('Primary KPI', 'primaryKpi', 'e.g. ROAS, CPA, leads', 'main goal')}
-            {field('Target CPA', 'targetCpa', 'e.g. €25')}
-            {field('Target ROAS', 'targetRoas', 'e.g. 4x or 400%')}
-            {field('Monthly budget', 'budgetMonthly', 'e.g. €3.000/month')}
-            {field('Constraints', 'constraints', 'e.g. no brand bidding, max CPC €2', 'things that cannot change')}
-            {field('Notes', 'notes', 'Anything else Claude should know about this account')}
+
+            <div className="form-section">
+              <h3>Business Identity</h3>
+              {tf('Business / Brand name', 'businessName', 'e.g. Azuramoda')}
+              {tf('Vertical', 'vertical', 'e.g. ecommerce, lead gen, local services, SaaS')}
+              {sf('Mode', 'mode', ['Growth', 'Balanced', 'Cost Control'], 'overall strategy direction')}
+              {sf('Phase', 'phase', ['Launch', 'Learning', 'Optimization', 'Scaling', 'Maintenance'], 'current account lifecycle stage')}
+            </div>
+
+            <div className="form-section">
+              <h3>Performance Targets</h3>
+              {sf('Primary KPI', 'primaryKpi', ['CPA', 'ROAS', 'Conversions', 'Revenue'])}
+              <div className="form-row">
+                {tf('Target CPA', 'targetCpa', 'e.g. €25')}
+                {tf('Max CPA (hard limit)', 'maxCpa', 'e.g. €40')}
+              </div>
+              <div className="form-row">
+                {tf('Target ROAS', 'targetRoas', 'e.g. 4x or 400%')}
+                {tf('Min ROAS (hard limit)', 'minRoas', 'e.g. 2x')}
+              </div>
+              <div className="form-row">
+                {tf('Target monthly conversions', 'targetConversions', 'e.g. 200')}
+                {tf('Monthly budget', 'budgetMonthly', `e.g. 3000`)}
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h3>Campaigns <span className="section-hint">auto-fetched — label each campaign</span></h3>
+              {contextDraft.campaigns.length === 0 ? (
+                <p className="section-empty">{setupLoading ? 'Loading...' : 'No campaigns found.'}</p>
+              ) : (
+                <div className="campaign-table">
+                  <div className="campaign-header">
+                    <span>Campaign</span>
+                    <span>Type</span>
+                    <span>30d Spend</span>
+                    <span>30d CPA</span>
+                    <span>Label</span>
+                  </div>
+                  {contextDraft.campaigns.map((c, i) => (
+                    <div key={c.name} className={`campaign-row${c.status === 'PAUSED' ? ' paused' : ''}`}>
+                      <span className="campaign-name" title={c.name}>{c.name}</span>
+                      <span className="campaign-type">{formatCampaignType(c.type)}</span>
+                      <span className="campaign-metric">{contextDraft.currency} {c.cost30d.toLocaleString()}</span>
+                      <span className="campaign-metric">{c.cpa30d != null ? `${contextDraft.currency} ${c.cpa30d}` : '—'}</span>
+                      <select
+                        className="label-select"
+                        value={c.label}
+                        onChange={e => setCampaignLabel(i, e.target.value)}
+                      >
+                        <option value="">— unlabeled —</option>
+                        <option value="brand">Brand</option>
+                        <option value="non-brand">Non-Brand</option>
+                        <option value="competitor">Competitor</option>
+                        <option value="test">Test / Discovery</option>
+                        <option value="display">Display / Awareness</option>
+                        <option value="pmax">PMax</option>
+                        <option value="shopping">Shopping</option>
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="form-section">
+              <h3>Conversion Tracking <span className="section-hint">auto-fetched — toggle and configure</span></h3>
+              {contextDraft.conversionActions.length === 0 ? (
+                <p className="section-empty">{setupLoading ? 'Loading...' : 'No conversion actions found.'}</p>
+              ) : (
+                <>
+                  <div className="conv-action-list">
+                    <div className="conv-action-header">
+                      <span>Use</span>
+                      <span>Action</span>
+                      <span>Category</span>
+                      <span>Value override</span>
+                    </div>
+                    {contextDraft.conversionActions.map((ca, i) => (
+                      <div key={ca.name} className="conv-action-row">
+                        <input
+                          type="checkbox"
+                          checked={ca.include}
+                          onChange={e => setConversionInclude(i, e.target.checked)}
+                        />
+                        <span className={ca.include ? '' : 'conv-excluded'}>{ca.name}</span>
+                        <span className="conv-category">{ca.category}</span>
+                        <input
+                          className="conv-value-input"
+                          placeholder={ca.defaultValue ? `default: ${ca.defaultValue}` : 'e.g. 50'}
+                          value={ca.customValue}
+                          onChange={e => setConversionValue(i, e.target.value)}
+                          disabled={!ca.include}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="form-row" style={{ marginTop: 12 }}>
+                    {tf('Value per lead / conversion', 'valuePerLead', 'e.g. 150', 'revenue per acquisition')}
+                    {tf('Lead-to-close rate', 'leadToCloseRate', 'e.g. 20%')}
+                  </div>
+                  <div className="form-row">
+                    {tf('Average deal value', 'avgDealValue', 'e.g. 2500')}
+                    {tf('Conversion lag (days)', 'conversionLagDays', '14', 'days before a conversion is counted as final')}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="form-section">
+              <h3>Competitive Strategy</h3>
+              {sf('Competitive approach', 'competitiveApproach', ['Aggressive', 'Defensive', 'Balanced', 'Opportunistic'])}
+              {tf('Competitor domains', 'competitorDomains', 'e.g. competitor1.com, competitor2.com', 'comma-separated, used by competitor-scraper')}
+              {tf('Win themes', 'winThemes', 'e.g. Faster delivery, better pricing, local service')}
+              <div className="form-field">
+                <label>Country / location <span className="form-hint"> — used for competitor scraping</span></label>
+                <select value={contextDraft.locationCode} onChange={e => setDraft('locationCode', e.target.value)}>
+                  {Object.entries(LOCATION_CODES).map(([code, name]) => (
+                    <option key={code} value={code}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h3>Search Term Analysis Config</h3>
+              <div className="form-row">
+                {sf('Negative match type', 'negativeMatchType', ['Broad', 'Phrase', 'Exact'], 'default match type for new negatives')}
+                {tf('Primary negative list name', 'primaryNegativeList', 'Search Term Exclusions', 'exact name in Google Ads')}
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h3>Constraints &amp; Notes</h3>
+              {tf('Known constraints', 'constraints', 'e.g. no brand bidding, max CPC €2, no weekend changes', 'things that cannot change')}
+              {tf('Seasonality', 'seasonalityNotes', 'e.g. Q4 peak Nov–Dec, summer dip in July')}
+              {tf('Additional notes', 'notes', 'Anything else Claude should know about this account')}
+            </div>
+
             <div className="form-actions">
-              <button className="run-btn" onClick={saveAndClose}>Save & continue</button>
+              <button className="run-btn" onClick={saveAndClose}>Save &amp; continue</button>
               {hasContext(context) && (
                 <button className="cancel-btn" onClick={() => setShowContextForm(false)}>Cancel</button>
               )}
