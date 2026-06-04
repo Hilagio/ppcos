@@ -171,8 +171,31 @@ ${JSON.stringify(adsConfig, null, 2)}
 \`\`\``
 }
 
+function compressMessages(messages: Anthropic.MessageParam[]): Anthropic.MessageParam[] {
+  return messages.map(msg => {
+    if (msg.role !== 'user') return msg
+    const content = msg.content
+    if (!Array.isArray(content)) return msg
+    const compressedContent = content.map(block => {
+      if (
+        typeof block === 'object' &&
+        block !== null &&
+        'type' in block &&
+        block.type === 'tool_result' &&
+        'content' in block &&
+        typeof block.content === 'string' &&
+        block.content.length > 3000
+      ) {
+        return { ...block, content: `[Data processed — ${block.content.length} chars]` }
+      }
+      return block
+    })
+    return { ...msg, content: compressedContent }
+  })
+}
+
 export async function POST(request: Request) {
-  const { client: clientName, skill: skillId, args, context } = await request.json()
+  const { client: clientName, skill: skillId, args, context, messages: incomingMessages, userMessage: incomingUserMessage } = await request.json()
 
   const clientConfig = getClient(clientName)
   if (!clientConfig) return new Response('Client not found', { status: 404 })
@@ -203,7 +226,11 @@ ${contextSection}
 
 ${skill.content}`
 
-  const userMessage = args ? `/${skillId} ${args}` : `/${skillId}`
+  const isContinuation = Array.isArray(incomingMessages) && incomingMessages.length > 0 && typeof incomingUserMessage === 'string'
+
+  const initialMessages: Anthropic.MessageParam[] = isContinuation
+    ? [...incomingMessages, { role: 'user' as const, content: incomingUserMessage }]
+    : [{ role: 'user' as const, content: args ? `/${skillId} ${args}` : `/${skillId}` }]
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -213,9 +240,7 @@ ${skill.content}`
       }
 
       try {
-        const messages: Anthropic.MessageParam[] = [
-          { role: 'user', content: userMessage },
-        ]
+        const messages: Anthropic.MessageParam[] = initialMessages
 
         let continueLoop = true
         while (continueLoop) {
@@ -268,9 +293,12 @@ ${skill.content}`
             messages.push({ role: 'assistant', content: response.content })
             messages.push({ role: 'user', content: toolResults })
           } else {
+            messages.push({ role: 'assistant', content: response.content })
             continueLoop = false
           }
         }
+
+        send({ type: 'conversation', messages: compressMessages(messages) })
       } catch (err: unknown) {
         send({ type: 'error', error: err instanceof Error ? err.message : String(err) })
       } finally {
