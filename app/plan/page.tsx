@@ -167,6 +167,7 @@ export default function PlanPage() {
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
+      let receivedDone = false
 
       while (true) {
         const { done, value } = await reader.read()
@@ -186,10 +187,9 @@ export default function PlanPage() {
               setPhases(prev => ({ ...prev, [event.phase]: 'error' }))
             } else if (event.type === 'plan') {
               setPlanText(prev => prev + event.text)
-              if (event.phase !== 'synthesis') {
-                setPhases(prev => ({ ...prev, synthesis: 'running' }))
-              }
+              setPhases(prev => ({ ...prev, synthesis: 'running' }))
             } else if (event.type === 'done') {
+              receivedDone = true
               setPhases(prev => {
                 const next = { ...prev }
                 for (const p of AUDIT_PHASES) {
@@ -202,6 +202,16 @@ export default function PlanPage() {
             }
           } catch {}
         }
+      }
+      if (!receivedDone) {
+        setError('Connection closed before the plan finished — Vercel function timeout (300s). Try with fewer focus areas or a smaller account.')
+        setPhases(prev => {
+          const next = { ...prev }
+          for (const p of AUDIT_PHASES) {
+            if (next[p] === 'running') next[p] = 'error'
+          }
+          return next
+        })
       }
     } catch (err) {
       setError(String(err))

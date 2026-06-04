@@ -3,6 +3,8 @@ import { getClient } from '@/lib/clients'
 import { getSkill } from '@/lib/skills'
 import { runGaqlQuery } from '@/lib/google-ads'
 
+export const maxDuration = 300
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const TOOLS: Anthropic.Tool[] = [
@@ -156,6 +158,17 @@ ${JSON.stringify(adsConfig, null, 2)}
 \`\`\``
 }
 
+const SKILL_TIMEOUT_MS = 60_000
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms)
+    ),
+  ])
+}
+
 async function runAuditSkill(
   skillId: string,
   customerId: string,
@@ -164,23 +177,28 @@ async function runAuditSkill(
   send: (data: object) => void,
 ): Promise<string> {
   const messages: Anthropic.MessageParam[] = [
-    { role: 'user', content: `/${skillId} --diagnose\n\nIMPORTANT: Run a focused diagnostic pass. Fetch only the data you need for key findings. Output a concise findings summary — no need for the full interactive flow. Stop after the first complete diagnostic output.` },
+    { role: 'user', content: `/${skillId} --diagnose\n\nIMPORTANT: Be extremely concise. Run only the most essential GAQL queries (max 3). Output key findings in bullet points only. No interactive questions. No full report — just the critical diagnostic findings in under 500 words.` },
   ]
 
   let fullText = ''
   let continueLoop = true
   let round = 0
-  const MAX_ROUNDS = 5
+  const MAX_ROUNDS = 4
+  const deadline = Date.now() + SKILL_TIMEOUT_MS
 
-  while (continueLoop && round < MAX_ROUNDS) {
+  while (continueLoop && round < MAX_ROUNDS && Date.now() < deadline) {
     round++
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4000,
-      system: systemPrompt,
-      tools: TOOLS,
-      messages,
-    })
+    const response = await withTimeout(
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        system: systemPrompt,
+        tools: TOOLS,
+        messages,
+      }),
+      Math.max(deadline - Date.now(), 5000),
+      skillId,
+    )
 
     const toolResults: Anthropic.ToolResultBlockParam[] = []
 
@@ -192,10 +210,10 @@ async function runAuditSkill(
         let result: string
         try {
           if (block.name === 'run_gaql_query') {
-            const rows = await runGaqlQuery(
-              customerId,
-              loginCustomerId,
-              (block.input as { query: string }).query
+            const rows = await withTimeout(
+              runGaqlQuery(customerId, loginCustomerId, (block.input as { query: string }).query),
+              15_000,
+              'gaql',
             )
             result = JSON.stringify(rows, null, 2)
           } else {
