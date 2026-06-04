@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Client { name: string; customerId: number }
 interface ArgumentOption { value: string; label: string; description: string }
@@ -516,16 +518,20 @@ export default function HomePage() {
                       {running ? 'Running...' : 'Run'}
                     </button>
                   </div>
-                  <div className="output-area" ref={outputRef}>
+                  <div className={`output-area${output.some(l => l.type === 'text') ? ' output-area--markdown' : ''}`} ref={outputRef}>
                     {output.length === 0 ? (
                       <span className="empty">Press Run to execute /{selectedSkill.id}{args ? ` ${args}` : ''}</span>
                     ) : output.map((line, i) => {
-                      if (line.type === 'text') return <span key={i}>{line.content}</span>
-                      if (line.type === 'tool_use') return <span key={i}><br /><span className="tool-badge">{line.content}</span><br /></span>
-                      if (line.type === 'tool_result') return <span key={i}><span className="tool-result-badge">{line.content}</span><br /></span>
-                      if (line.type === 'tool_error') return <span key={i}><span className="error-badge">{line.content}</span><br /></span>
-                      if (line.type === 'error') return <span key={i}><span className="error-badge">Error: {line.content}</span><br /></span>
-                      if (line.type === 'done') return <span key={i}><br /><span className="done-badge">{line.content}</span></span>
+                      if (line.type === 'text') return (
+                        <div key={i} className="md-output">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{line.content}</ReactMarkdown>
+                        </div>
+                      )
+                      if (line.type === 'tool_use') return <div key={i} className="badge-row"><span className="tool-badge">{line.content}</span></div>
+                      if (line.type === 'tool_result') return <div key={i} className="badge-row"><span className="tool-result-badge">{line.content}</span></div>
+                      if (line.type === 'tool_error') return <div key={i} className="badge-row"><span className="error-badge">{line.content}</span></div>
+                      if (line.type === 'error') return <div key={i} className="badge-row"><span className="error-badge">Error: {line.content}</span></div>
+                      if (line.type === 'done') return <div key={i} className="badge-row"><span className="done-badge">{line.content}</span></div>
                       return null
                     })}
                   </div>

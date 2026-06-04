@@ -247,7 +247,35 @@ header span { color: #666; font-size: 13px; }
   white-space: pre-wrap;
 }
 
+.output-area--markdown {
+  background: #fff;
+  color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  white-space: normal;
+}
+
 .output-area .empty { color: #555; font-style: italic; }
+
+.badge-row { margin: 6px 0; }
+
+/* Markdown output styles */
+.md-output { font-size: 13px; line-height: 1.7; }
+.md-output h1 { font-size: 18px; font-weight: 700; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #e5e5e5; }
+.md-output h2 { font-size: 15px; font-weight: 700; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #f0f0f0; color: #4f46e5; }
+.md-output h3 { font-size: 13px; font-weight: 600; margin: 14px 0 6px; color: #374151; }
+.md-output p { margin: 6px 0; }
+.md-output ul, .md-output ol { margin: 6px 0 6px 20px; }
+.md-output li { margin: 3px 0; }
+.md-output strong { font-weight: 600; }
+.md-output code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-family: monospace; font-size: 12px; }
+.md-output pre { background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 8px 0; }
+.md-output pre code { background: none; padding: 0; }
+.md-output table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+.md-output th { background: #f9fafb; font-weight: 600; text-align: left; padding: 8px 10px; border: 1px solid #e5e5e5; }
+.md-output td { padding: 7px 10px; border: 1px solid #e5e5e5; }
+.md-output tr:nth-child(even) td { background: #f9fafb; }
+.md-output blockquote { border-left: 3px solid #4f46e5; margin: 8px 0; padding: 4px 12px; color: #666; background: #f5f5ff; border-radius: 0 4px 4px 0; }
+.md-output hr { border: none; border-top: 1px solid #e5e5e5; margin: 16px 0; }
 
 .tool-badge {
   display: inline-block;

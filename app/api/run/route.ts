@@ -221,7 +221,7 @@ ${skill.content}`
         while (continueLoop) {
           const response = await anthropic.messages.create({
             model: 'claude-sonnet-4-6',
-            max_tokens: 8096,
+            max_tokens: 32000,
             system: systemPrompt,
             tools: TOOLS,
             messages,
