@@ -4,7 +4,8 @@
     "dev": "next dev -p 3000",
     "prebuild": "node scripts/generate-data.mjs",
     "build": "next build",
-    "start": "next start -p 3000"
+    "start": "next start -p 3000",
+    "update-deps": "npm install google-ads-api@latest @anthropic-ai/sdk@latest && node scripts/generate-data.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
