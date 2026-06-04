@@ -41,7 +41,23 @@ export async function POST(request: Request) {
   const skill = getSkill(clientName, skillId)
   if (!skill) return new Response('Skill not found', { status: 404 })
 
-  const systemPrompt = skill.claudeMd + '\n\n---\n\n' + skill.content
+  const systemPrompt = `${skill.claudeMd}
+
+---
+
+## Dashboard Environment — Important
+
+Context files (context/business.md, context/account-changelog.md, config/ads-context.config.json) are NOT available as files in this environment. Do NOT attempt to read them — skip straight to using the \`run_gaql_query\` tool to fetch all data you need live from the Google Ads API.
+
+The client's Google Ads configuration is:
+- Customer ID: ${clientConfig.customerId}
+- Login Customer ID: ${clientConfig.loginCustomerId}
+
+You have full access to the Google Ads API via \`run_gaql_query\`. Use it directly to fetch campaigns, ad groups, keywords, settings, change history, and any other data the skill requires. Do not wait for or request missing files.
+
+---
+
+${skill.content}`
 
   const userMessage = args ? `/${skillId} ${args}` : `/${skillId}`
 
