@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -329,6 +330,10 @@ export default function HomePage() {
             </button>
           </>
         )}
+        <nav className="header-nav">
+          <Link href="/" className="active">Skills</Link>
+          <Link href="/plan">90-Day Plan</Link>
+        </nav>
       </header>
 
       <div className="main-layout">
