@@ -7,7 +7,7 @@ import remarkGfm from 'remark-gfm'
 interface Client { name: string; customerId: number }
 interface ArgumentOption { value: string; label: string; description: string }
 interface Skill { id: string; name: string; description: string; argumentHint: string; argumentOptions: ArgumentOption[] }
-interface OutputLine { type: 'text' | 'tool_use' | 'tool_result' | 'tool_error' | 'error' | 'done'; content: string }
+interface OutputLine { type: 'text' | 'tool_use' | 'tool_result' | 'tool_error' | 'error' | 'done' | 'user'; content: string }
 
 interface Campaign {
   name: string
@@ -127,6 +127,8 @@ export default function HomePage() {
   const [showContextForm, setShowContextForm] = useState(false)
   const [contextDraft, setContextDraft] = useState<ClientContext>(EMPTY_CONTEXT)
   const [setupLoading, setSetupLoading] = useState(false)
+  const [chatInput, setChatInput] = useState('')
+  const [storedMessages, setStoredMessages] = useState<unknown[]>([])
   const outputRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -172,10 +174,28 @@ export default function HomePage() {
     setShowContextForm(false)
   }
 
+  const streamEvents = async (res: Response) => {
+    const reader = res.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        try { handleEvent(JSON.parse(line.slice(6))) } catch {}
+      }
+    }
+  }
+
   const runSkill = async () => {
     if (!selectedSkill || !selectedClient || running) return
     setRunning(true)
     setOutput([])
+    setStoredMessages([])
     try {
       const res = await fetch('/api/run', {
         method: 'POST',
@@ -187,20 +207,37 @@ export default function HomePage() {
         setOutput(prev => [...prev, { type: 'error', content: `Server error ${res.status}: ${text}` }])
         return
       }
-      const reader = res.body!.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n\n')
-        buffer = lines.pop() || ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          try { handleEvent(JSON.parse(line.slice(6))) } catch {}
-        }
+      await streamEvents(res)
+    } catch (err) {
+      setOutput(prev => [...prev, { type: 'error', content: String(err) }])
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  const continueChat = async (message: string) => {
+    if (!selectedSkill || !selectedClient || running) return
+    setRunning(true)
+    setOutput(prev => [...prev, { type: 'user', content: message }])
+    try {
+      const res = await fetch('/api/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client: selectedClient.name,
+          skill: selectedSkill.id,
+          args,
+          context,
+          messages: storedMessages,
+          userMessage: message,
+        }),
+      })
+      if (!res.ok) {
+        const text = await res.text()
+        setOutput(prev => [...prev, { type: 'error', content: `Server error ${res.status}: ${text}` }])
+        return
       }
+      await streamEvents(res)
     } catch (err) {
       setOutput(prev => [...prev, { type: 'error', content: String(err) }])
     } finally {
@@ -225,6 +262,8 @@ export default function HomePage() {
       setOutput(prev => [...prev, { type: 'error', content: event.error as string }])
     } else if (event.type === 'done') {
       setOutput(prev => [...prev, { type: 'done', content: '— done —' }])
+    } else if (event.type === 'conversation') {
+      setStoredMessages(event.messages as unknown[])
     }
   }
 
@@ -518,13 +557,18 @@ export default function HomePage() {
                       {running ? 'Running...' : 'Run'}
                     </button>
                   </div>
-                  <div className={`output-area${output.some(l => l.type === 'text') ? ' output-area--markdown' : ''}`} ref={outputRef}>
+                  <div className={`output-area${output.some(l => l.type === 'text' || l.type === 'user') ? ' output-area--markdown' : ''}`} ref={outputRef}>
                     {output.length === 0 ? (
                       <span className="empty">Press Run to execute /{selectedSkill.id}{args ? ` ${args}` : ''}</span>
                     ) : output.map((line, i) => {
                       if (line.type === 'text') return (
                         <div key={i} className="md-output">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>{line.content}</ReactMarkdown>
+                        </div>
+                      )
+                      if (line.type === 'user') return (
+                        <div key={i} className="user-bubble">
+                          <span>{line.content}</span>
                         </div>
                       )
                       if (line.type === 'tool_use') return <div key={i} className="badge-row"><span className="tool-badge">{line.content}</span></div>
@@ -535,6 +579,37 @@ export default function HomePage() {
                       return null
                     })}
                   </div>
+                  {storedMessages.length > 0 && (
+                    <div className="chat-input-bar">
+                      <input
+                        className="chat-input"
+                        placeholder="Reply to continue the conversation..."
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && chatInput.trim() && !running) {
+                            const msg = chatInput.trim()
+                            setChatInput('')
+                            continueChat(msg)
+                          }
+                        }}
+                        disabled={running}
+                      />
+                      <button
+                        className="run-btn"
+                        onClick={() => {
+                          if (chatInput.trim() && !running) {
+                            const msg = chatInput.trim()
+                            setChatInput('')
+                            continueChat(msg)
+                          }
+                        }}
+                        disabled={running || !chatInput.trim()}
+                      >
+                        Send
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
