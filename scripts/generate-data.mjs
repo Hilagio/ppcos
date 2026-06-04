@@ -75,10 +75,39 @@ function parseFrontmatter(content) {
   const match = content.match(/^---\n([\s\S]*?)\n---/)
   if (!match) return {}
   const result = {}
-  for (const line of match[1].split('\n')) {
+  const lines = match[1].split('\n')
+  let currentKey = null
+  let blockLines = []
+  let blockType = null // '>' folded, '|' literal
+
+  const flushBlock = () => {
+    if (!currentKey) return
+    if (blockType) {
+      const joined = blockLines.map(l => l.trim()).join(blockType === '>' ? ' ' : '\n').trim()
+      result[currentKey] = joined
+    }
+    blockLines = []
+    blockType = null
+  }
+
+  for (const line of lines) {
+    if (blockType && (line.startsWith(' ') || line.startsWith('\t'))) {
+      blockLines.push(line)
+      continue
+    }
+    flushBlock()
     const i = line.indexOf(':')
     if (i === -1) continue
-    result[line.slice(0, i).trim()] = line.slice(i + 1).trim()
+    const key = line.slice(0, i).trim()
+    const val = line.slice(i + 1).trim()
+    if (val === '>' || val === '|') {
+      currentKey = key
+      blockType = val
+    } else {
+      currentKey = key
+      result[key] = val
+    }
   }
+  flushBlock()
   return result
 }
