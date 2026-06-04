@@ -158,26 +158,25 @@ ${JSON.stringify(adsConfig, null, 2)}
 
 async function runAuditSkill(
   skillId: string,
-  clientName: string,
   customerId: string,
   loginCustomerId: string,
   systemPrompt: string,
   send: (data: object) => void,
 ): Promise<string> {
   const messages: Anthropic.MessageParam[] = [
-    { role: 'user', content: `/${skillId} --diagnose` },
+    { role: 'user', content: `/${skillId} --diagnose\n\nIMPORTANT: Run a focused diagnostic pass. Fetch only the data you need for key findings. Output a concise findings summary — no need for the full interactive flow. Stop after the first complete diagnostic output.` },
   ]
 
   let fullText = ''
   let continueLoop = true
   let round = 0
-  const MAX_ROUNDS = 8
+  const MAX_ROUNDS = 5
 
   while (continueLoop && round < MAX_ROUNDS) {
     round++
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 8000,
+      max_tokens: 4000,
       system: systemPrompt,
       tools: TOOLS,
       messages,
@@ -276,14 +275,17 @@ export async function POST(request: Request) {
       try {
         const auditResults: Record<string, string> = {}
 
-        for (const skillId of AUDIT_SKILLS) {
+        // Mark all phases as starting simultaneously
+        for (const skillId of AUDIT_SKILLS) send({ type: 'phase', phase: skillId })
+
+        // Run all audits in parallel
+        await Promise.all(AUDIT_SKILLS.map(async (skillId) => {
           const skill = getSkill(clientName, skillId)
           if (!skill) {
-            send({ type: 'phase', phase: `Skipping ${skillId} (not found)` })
-            continue
+            send({ type: 'phase_error', phase: skillId, error: 'Skill not found' })
+            auditResults[skillId] = `[${skillId} not found]`
+            return
           }
-
-          send({ type: 'phase', phase: skillId })
 
           const systemPrompt = `${skill.claudeMd}
 
@@ -306,7 +308,6 @@ ${skill.content}`
           try {
             const output = await runAuditSkill(
               skillId,
-              clientName,
               customerId,
               loginCustomerId,
               systemPrompt,
@@ -318,7 +319,7 @@ ${skill.content}`
             send({ type: 'phase_error', phase: skillId, error: err instanceof Error ? err.message : String(err) })
             auditResults[skillId] = `[Error running ${skillId}: ${err instanceof Error ? err.message : String(err)}]`
           }
-        }
+        }))
 
         send({ type: 'phase', phase: 'synthesis' })
 
