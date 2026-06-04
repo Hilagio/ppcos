@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getClient } from '@/lib/clients'
-import { getSkill, readContextFile } from '@/lib/skills'
+import { getSkill } from '@/lib/skills'
 import { runGaqlQuery } from '@/lib/google-ads'
 
 const anthropic = new Anthropic({
@@ -41,12 +41,7 @@ export async function POST(request: Request) {
   const skill = getSkill(clientName, skillId)
   if (!skill) return new Response('Skill not found', { status: 404 })
 
-  const businessMd = readContextFile(clientName, 'context/business.md')
-  const changelogMd = readContextFile(clientName, 'context/account-changelog.md')
-
-  let systemPrompt = skill.claudeMd + '\n\n---\n\n' + skill.content
-  if (businessMd) systemPrompt += '\n\n## Business Context\n' + businessMd
-  if (changelogMd) systemPrompt += '\n\n## Account Changelog\n' + changelogMd
+  const systemPrompt = skill.claudeMd + '\n\n---\n\n' + skill.content
 
   const userMessage = args ? `/${skillId} ${args}` : `/${skillId}`
 
@@ -91,9 +86,8 @@ export async function POST(request: Request) {
                   result = JSON.stringify(rows, null, 2)
                   send({ type: 'tool_result', name: block.name, summary: `${rows.length} rows returned` })
                 } else if (block.name === 'read_context_file') {
-                  const content = readContextFile(clientName, (block.input as { path: string }).path)
-                  result = content ?? 'File not found'
-                  send({ type: 'tool_result', name: block.name, summary: content ? 'File read' : 'File not found' })
+                  result = 'Context files not available in this environment'
+                  send({ type: 'tool_result', name: block.name, summary: 'Not available' })
                 } else {
                   result = 'Unknown tool'
                 }
